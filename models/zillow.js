@@ -98,7 +98,7 @@ var Zillow = function(koop) {
       crs: {
         type: 'name',
         properties: {
-          name: 'EPSG:3857'
+          name: 'EPSG:4326'
         }
       },
       features: []
@@ -109,7 +109,7 @@ var Zillow = function(koop) {
         type: 'Feature',
         geometry: {
           type: 'point',
-          coordinates: [property[2], property[1]]
+          coordinates: [property[2]/1000000, property[1]/1000000]
         },
         properties: {
           id: property[0],
