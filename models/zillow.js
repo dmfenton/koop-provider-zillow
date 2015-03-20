@@ -109,7 +109,7 @@ var Zillow = function(koop) {
         type: 'Feature',
         geometry: {
           type: 'point',
-          coordinates: [property[1], property[2]]
+          coordinates: [property[2], property[1]]
         },
         properties: {
           id: property[0],
