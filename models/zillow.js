@@ -25,18 +25,6 @@ var Zillow = function(koop) {
           ], function (err, result){
              cache_insert(result);
           });
-        // if we get an err then get the data and insert it 
-        
-
-        request.get(url, function(e, res) {
-          //var json = JSON.parse(res.body);
-          // do something; turn json into GeoJSON
-          // fake some geojson data for the sake of example
-
-
-          // insert data into the cache; assume layer is 0 unless there are many layers (most cases 0 is fine)  
-
-        });
       } else {
         callback(null, entry);
       }

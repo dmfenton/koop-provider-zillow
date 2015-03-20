@@ -3,6 +3,6 @@
 
 module.exports = {
   // route : handler
-  'get /sample': 'index',
-  'get /sample/:id': 'get'
-}
+  'get /zillow': 'index',
+  'get /zillow/:id': 'get'
+};
