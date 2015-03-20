@@ -6,24 +6,28 @@ var Zillow = function(koop) {
   var zillow = {};
   zillow.__proto__ = koop.BaseModel(koop);
 
-  zillow.find = function(id, options, callback) {
-
+  zillow.find = function(id, options, cb) {
+    var type = 'Zillow';
+    var id = 'test';
     // check the cache for data with this type & id 
     koop.Cache.get(type, id, options, function(err, entry) {
       if (err) {
         var url = 'http://www.zillow.com/search/GetResults.htm?';
         async.waterfall([
           function(callback){
-            callback(null, build_options);
+            parameters = build_options();
+            callback(null, parameters);
           },
-          function (paramaters, callback){
-            callback(null, get_api(url, parameters));
+          function (parameters, callback){
+            get_api(url, parameters, function(err, res){
+              callback(null, res);
+            });
           },
           function (res, callback){
             callback(null, translate(res));
           }
           ], function (err, result){
-             cache_insert(result);
+             cache_insert(result, cb);
           });
       } else {
         callback(null, entry);
@@ -31,19 +35,18 @@ var Zillow = function(koop) {
     });
   };
 
-  var cache_insert = function(geojson){
-    var type = 'Zillow';
-    var id = 'test';
-    koop.Cache.insert(type, id, geojson, 0, function(err, success) {
+  var cache_insert = function(geojson, callback){
+    koop.Cache.insert('zillow', 'test', geojson, 0, function(err, success) {
       if (success) {
         callback(null, geojson);
       }
     });
   };
 
-  var get_api = function(url, parameters){
-    request.get(url + parameters, function(e, res){
-      return res;
+  var get_api = function(url, parameters, callback){
+    console.log(url+parameters);
+    request.get(url + parameters, function(err, res){
+      callback(err,res);
     });
   };
   var build_options = function() {
@@ -81,11 +84,11 @@ var Zillow = function(koop) {
       listright: true,
       isMapSearch: true
     };
-    var parameters;
+    var parameters = '';
     for (var key in standard) {
-      options = options + key + ':' + standard[key];
+      parameters = parameters + key + '=' + standard[key] + '&';
     }
-    return parameters;
+    return parameters.slice(0,-1);
   };
 
   var translate = function(res) {
@@ -101,10 +104,11 @@ var Zillow = function(koop) {
       features: []
     };
     json.map.properties.forEach(function(property) {
+      var price = property[7][0];
       geojson.features.push({
         type: 'Feature',
         geometry: {
-          type: point,
+          type: 'point',
           coordinates: [property[1], property[2]]
         },
         properties: {
