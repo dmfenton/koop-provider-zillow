@@ -1,0 +1,28 @@
+{
+  "name": "koop-zillow",
+  "version": "0.0.1",
+  "description": "A zillow provider for koop ",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha test/"
+  },
+  "dependencies": {
+    "koop-server": "*",
+    "config": "~0.4.35",
+    "ejs": "~1.0.0"
+  },
+  "author": "Daniel Fenton",
+  "license": "BSD-2-Clause",
+  "devDependencies": {
+    "supertest": "~0.11.0",
+    "should": "~4.0.4",
+    "sinon": "~1.10.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com:dmfenton/koop-zillow.git"
+  }
+}
