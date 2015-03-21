@@ -3,7 +3,7 @@ exports.name = 'zillow';
 
 // the "pattern" is used to build routes and is optional 
 // a pattern is essentially the default route pattern for the provider 
-exports.pattern = '/:id';
+exports.pattern = '/:place';
 
 // attached the controller to the provider 
 exports.controller = require('./controller');

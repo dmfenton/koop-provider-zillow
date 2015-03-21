@@ -1,67 +1,115 @@
 var request = require('request');
 var async = require('async');
+var hash = require('object-hash');
+var config = require('config');
 
 var Zillow = function(koop) {
 
   var zillow = {};
   zillow.__proto__ = koop.BaseModel(koop);
+  var type = 'zillow';
+  var locations = {};
 
-  zillow.find = function(id, options, cb) {
-    var type = 'Zillow';
-    var id = 'test';
+  zillow.find = function(params, options, cb) {
+    if (!params.layer){
+      params.layer = '0';
+    }
+    console.log(params);
+    var key = hash.MD5(params);
+    console.log(key);
     // check the cache for data with this type & id 
-    koop.Cache.get(type, id, options, function(err, entry) {
+    koop.Cache.get(type, key, options, function(err, entry) {
       if (err) {
         var url = 'http://www.zillow.com/search/GetResults.htm?';
         async.waterfall([
-          function(callback){
-            parameters = build_options();
-            callback(null, parameters);
+          function(callback) {
+            get_bbox(params.place, function(bbox){
+              params.bbox = bbox;
+              console.log(bbox);
+              console.log(params);
+              callback(null);
+            });
           },
-          function (parameters, callback){
-            get_api(url, parameters, function(err, res){
+          function(callback) {
+            query = build_options(params);
+            callback(null, query);
+          },
+          function(query, callback) {
+            get_api(url, query, function(err, res) {
               callback(null, res);
             });
           },
-          function (res, callback){
+          function(res, callback) {
             callback(null, translate(res));
           }
-          ], function (err, result){
-             cache_insert(result, cb);
-          });
+        ], function(err, geojson) {
+          cache_insert(key, geojson, cb);
+        });
       } else {
-        callback(null, entry);
+        cb(null, entry);
       }
     });
   };
 
-  var cache_insert = function(geojson, callback){
-    koop.Cache.insert('zillow', 'test', geojson, 0, function(err, success) {
+  var cache_insert = function(key, geojson, callback) {
+    koop.Cache.insert(type, key, geojson, 0, function(err, success) {
       if (success) {
         callback(null, geojson);
       }
     });
   };
 
-  var get_api = function(url, parameters, callback){
-    console.log(url+parameters);
-    request.get(url + parameters, function(err, res){
-      callback(err,res);
+  var get_api = function(url, parameters, callback) {
+    console.log(url + parameters);
+    request.get(url + parameters, function(err, res) {
+      callback(err, res);
     });
   };
-  var build_options = function() {
-    var standard = {
+
+  var get_bbox = function(place, callback) {
+    var bbox;
+    if (locations[place]) {
+      bbox = locations.place;
+      callback(bbox);
+    } else {
+      var token = config.esri.token;
+      var root = 'http://geocode.arcgis.com';
+      var gc_request = '/arcgis/rest/services/World/GeocodeServer/find?f=json&forStorage=true&maxlocations=1&outSR=4326';
+      gc_request = root + gc_request + '&text=' + encodeURI(place) + '&token=' + token;
+      request.get(gc_request, function(err, res) {
+        //handle the geocoder result
+        console.log('geocode request is: ' + gc_request);
+        if (err){
+          console.log('request is borked');
+        }
+        else {
+          response = JSON.parse(res.body);
+          extent = response.locations[0].extent;
+          for (var point in extent) {
+            extent[point] = extent[point] * 1000000;
+          }
+          bbox = extent.xmin + ',' + extent.ymin + ',' + extent.xmax + ',' + extent.ymax;
+          console.log('just after the bbox is set' + bbox);
+          locations.place = bbox;
+          callback(bbox);
+        }
+      });
+    }
+  };
+
+  var build_options = function(params) {
+    var options = {
       spt: 'homes',
       status: 110001,
       lt: 111101,
       ht: 111111,
-      pr: ',750000',
-      mp: ',2719',
-      bd: 2,
-      ba: 0,
-      sf: 1000,
-      lot: null,
-      yr: null,
+      pr: ',' + (params.max_price || '750000'),
+      mp: ',2729',
+      bd: (params.bedrooms || 2) + ',',
+      ba: (params.bathrooms || 0) + ',',
+      sf: (params.sqft || 1000) + ',',
+      lot: ',',
+      yr: ',',
       pho: 0,
       pets: 0,
       parking: 0,
@@ -74,21 +122,22 @@ var Zillow = function(koop) {
       pmf: 1,
       pf: 1,
       zoom: 11,
-      rect: '-77111149,38881546,-76863956,38985700',
+      rect: params.bbox,
       p: 1,
       sort: 'days',
-      search: 'maplist',
+      search: 'map',
       disp: 1,
       rid: 41568,
       rt: 6,
       listright: true,
       isMapSearch: true
     };
+
     var parameters = '';
-    for (var key in standard) {
-      parameters = parameters + key + '=' + standard[key] + '&';
+    for (var key in options) {
+      parameters = parameters + key + '=' + options[key] + '&';
     }
-    return parameters.slice(0,-1);
+    return parameters.slice(0, -1);
   };
 
   var translate = function(res) {
@@ -109,7 +158,7 @@ var Zillow = function(koop) {
         type: 'Feature',
         geometry: {
           type: 'point',
-          coordinates: [property[2]/1000000, property[1]/1000000]
+          coordinates: [property[2] / 1000000, property[1] / 1000000]
         },
         properties: {
           id: property[0],
@@ -121,7 +170,21 @@ var Zillow = function(koop) {
         }
       });
     });
-     return geojson;
+    return geojson;
+  };
+
+  zillow.drop = function(key, options, callback) {
+    // drops the item from the cache
+    var dir = ['zillow', key, 0].join(':');
+    koop.Cache.remove('zillow', key, options, function(err, res) {
+      koop.files.removeDir('files/' + dir, function(err, res) {
+        koop.files.removeDir('tiles/' + dir, function(err, res) {
+          koop.files.removeDir('thumbs/' + dir, function(err, res) {
+            callback(err, true);
+          });
+        });
+      });
+    });
   };
 
   return zillow;
