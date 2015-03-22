@@ -2,6 +2,7 @@ var request = require('request');
 var async = require('async');
 var hash = require('object-hash');
 var config = require('config');
+var fs = require('fs');
 
 var Zillow = function(koop) {
 
@@ -12,11 +13,11 @@ var Zillow = function(koop) {
 
   zillow.find = function(params, options, cb) {
     if (!params.layer){
-      params.layer = '0';
+      params.layer = 0;
+    } else {
+      params.layer = parseInt(params.layer);
     }
-    console.log(params);
     var key = hash.MD5(params);
-    console.log(key);
     // check the cache for data with this type & id 
     koop.Cache.get(type, key, options, function(err, entry) {
       if (err) {
@@ -25,8 +26,6 @@ var Zillow = function(koop) {
           function(callback) {
             get_bbox(params.place, function(bbox){
               params.bbox = bbox;
-              console.log(bbox);
-              console.log(params);
               callback(null);
             });
           },
@@ -78,9 +77,8 @@ var Zillow = function(koop) {
       gc_request = root + gc_request + '&text=' + encodeURI(place) + '&token=' + token;
       request.get(gc_request, function(err, res) {
         //handle the geocoder result
-        console.log('geocode request is: ' + gc_request);
         if (err){
-          console.log('request is borked');
+          console.log('geocode request is borked');
         }
         else {
           response = JSON.parse(res.body);
@@ -89,7 +87,6 @@ var Zillow = function(koop) {
             extent[point] = extent[point] * 1000000;
           }
           bbox = extent.xmin + ',' + extent.ymin + ',' + extent.xmax + ',' + extent.ymax;
-          console.log('just after the bbox is set' + bbox);
           locations.place = bbox;
           callback(bbox);
         }
@@ -144,12 +141,6 @@ var Zillow = function(koop) {
     var json = JSON.parse(res.body);
     var geojson = {
       type: 'FeatureCollection',
-      crs: {
-        type: 'name',
-        properties: {
-          name: 'EPSG:4326'
-        }
-      },
       features: []
     };
     json.map.properties.forEach(function(property) {
@@ -157,7 +148,7 @@ var Zillow = function(koop) {
       geojson.features.push({
         type: 'Feature',
         geometry: {
-          type: 'point',
+          type: 'Point',
           coordinates: [property[2] / 1000000, property[1] / 1000000]
         },
         properties: {
