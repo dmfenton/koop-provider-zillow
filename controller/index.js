@@ -48,7 +48,9 @@ var Controller = function( zillow, BaseController ){
   controller.drop = function(req, res){
     var params = req.params;
     if (!params.layer){
-      params.layer = '0';
+      params.layer = 0;
+    } else {
+      params.layer = parseInt(params.layer);
     }
     var key = hash.MD5(params);
     console.log(params);

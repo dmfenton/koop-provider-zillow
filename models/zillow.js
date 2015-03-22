@@ -1,8 +1,12 @@
+// used to send http requests
 var request = require('request');
+// used to manage control flow
 var async = require('async');
+// used to create hashes that fingerprint a given request
 var hash = require('object-hash');
+// used to authorize read authorization info for the geocoding service
 var config = require('config');
-var fs = require('fs');
+
 
 var Zillow = function(koop) {
 
@@ -19,9 +23,9 @@ var Zillow = function(koop) {
     }
     var key = hash.MD5(params);
     // check the cache for data with this type & id 
+    // if no prior requests exist then trigger this waterfall
     koop.Cache.get(type, key, options, function(err, entry) {
       if (err) {
-        var url = 'http://www.zillow.com/search/GetResults.htm?';
         async.waterfall([
           function(callback) {
             get_bbox(params.place, function(bbox){
@@ -34,6 +38,7 @@ var Zillow = function(koop) {
             callback(null, query);
           },
           function(query, callback) {
+            var url = 'http://www.zillow.com/search/GetResults.htm?';
             get_api(url, query, function(err, res) {
               callback(null, res);
             });
@@ -51,6 +56,7 @@ var Zillow = function(koop) {
   };
 
   var cache_insert = function(key, geojson, callback) {
+    // take translated geojson and huck it into Koop
     koop.Cache.insert(type, key, geojson, 0, function(err, success) {
       if (success) {
         callback(null, geojson);
@@ -59,6 +65,7 @@ var Zillow = function(koop) {
   };
 
   var get_api = function(url, parameters, callback) {
+    // simple wrapper around requests to the desired API
     console.log(url + parameters);
     request.get(url + parameters, function(err, res) {
       callback(err, res);
@@ -66,6 +73,7 @@ var Zillow = function(koop) {
   };
 
   var get_bbox = function(place, callback) {
+    // takes in a location string and returns a bbox in the format zillow understands
     var bbox;
     if (locations[place]) {
       bbox = locations.place;
@@ -83,6 +91,7 @@ var Zillow = function(koop) {
         else {
           response = JSON.parse(res.body);
           extent = response.locations[0].extent;
+          // zillow consumes wgs 84 coordinates without any decimals
           for (var point in extent) {
             extent[point] = extent[point] * 1000000;
           }
@@ -95,16 +104,18 @@ var Zillow = function(koop) {
   };
 
   var build_options = function(params) {
+    // createa a default set of parameters for the API call
+    // fill in passed in parameters where available
     var options = {
       spt: 'homes',
       status: 110001,
       lt: 111101,
       ht: 111111,
-      pr: ',' + (params.max_price || '750000'),
+      pr: ',' + (params.max_price || '10000000'),
       mp: ',2729',
-      bd: (params.bedrooms || 2) + ',',
+      bd: (params.bedrooms || 0) + ',',
       ba: (params.bathrooms || 0) + ',',
-      sf: (params.sqft || 1000) + ',',
+      sf: (params.sqft || 1) + ',',
       lot: ',',
       yr: ',',
       pho: 0,
@@ -129,7 +140,7 @@ var Zillow = function(koop) {
       listright: true,
       isMapSearch: true
     };
-
+    // concatenate all the parameters into one big string
     var parameters = '';
     for (var key in options) {
       parameters = parameters + key + '=' + options[key] + '&';
@@ -138,13 +149,31 @@ var Zillow = function(koop) {
   };
 
   var translate = function(res) {
+    // translate the Zillow API response into geojson
     var json = JSON.parse(res.body);
+    // create the shell that will hold all the properties
     var geojson = {
       type: 'FeatureCollection',
       features: []
     };
     json.map.properties.forEach(function(property) {
-      var price = property[7][0];
+    // loop through each property returned from the API call and push it into the geojson shell
+      var headline = property[7][0];
+      var type, price;
+      if (headline.slice(0,1) === '$'){
+        type = 'sale';
+        if (headline.slice(-1) === 'K'){
+          // take the price value and turn it into a number we can use
+          console.log('headline');
+          price = parseInt(headline.slice(1,-1)) * 1000;
+          console.log(price);
+        } else {
+          price = parseInt(headline.slice(1,-1)) * 1000000;
+        }
+      } else {
+          type = headline;
+          price = null;
+      }
       geojson.features.push({
         type: 'Feature',
         geometry: {
@@ -153,6 +182,8 @@ var Zillow = function(koop) {
         },
         properties: {
           id: property[0],
+          headline: headline,
+          type: type,
           price: price,
           bedrooms: property[7][1],
           bathrooms: property[7][2],
@@ -165,7 +196,7 @@ var Zillow = function(koop) {
   };
 
   zillow.drop = function(key, options, callback) {
-    // drops the item from the cache
+  // drops the item from the cache
     var dir = ['zillow', key, 0].join(':');
     koop.Cache.remove('zillow', key, options, function(err, res) {
       koop.files.removeDir('files/' + dir, function(err, res) {
