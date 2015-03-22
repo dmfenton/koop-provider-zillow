@@ -164,9 +164,7 @@ var Zillow = function(koop) {
         type = 'sale';
         if (headline.slice(-1) === 'K'){
           // take the price value and turn it into a number we can use
-          console.log('headline');
           price = parseInt(headline.slice(1,-1)) * 1000;
-          console.log(price);
         } else {
           price = parseInt(headline.slice(1,-1)) * 1000000;
         }
@@ -181,7 +179,7 @@ var Zillow = function(koop) {
           coordinates: [property[2] / 1000000, property[1] / 1000000]
         },
         properties: {
-          id: property[0],
+          listing: 'http://www.zillow.com/homedetails/' + property[0] + '_zpid/',
           headline: headline,
           type: type,
           price: price,
