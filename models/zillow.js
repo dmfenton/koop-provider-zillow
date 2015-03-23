@@ -16,11 +16,9 @@ var Zillow = function(koop) {
   var locations = {};
 
   zillow.find = function(params, options, cb) {
-    if (!params.layer){
-      params.layer = 0;
-    } else {
-      params.layer = parseInt(params.layer);
-    }
+    // delete these two keys or else we get inconsistent hash keys depending on the request
+    delete params.layer;
+    delete params.method;
     var key = hash.MD5(params);
     // check the cache for data with this type & id 
     // if no prior requests exist then trigger this waterfall
@@ -104,7 +102,7 @@ var Zillow = function(koop) {
   };
 
   var build_options = function(params) {
-    // createa a default set of parameters for the API call
+    // create a a default set of parameters for the API call
     // fill in passed in parameters where available
     var options = {
       spt: 'homes',
