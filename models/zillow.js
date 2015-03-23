@@ -13,7 +13,9 @@ var Zillow = function(koop) {
   var zillow = {};
   zillow.__proto__ = koop.BaseModel(koop);
   var type = 'zillow';
-  var locations = {};
+  var token_expiration;
+  var locations ={};
+  var token;
 
   zillow.find = function(params, options, cb) {
     // delete these two keys or else we get inconsistent hash keys depending on the request
@@ -25,6 +27,16 @@ var Zillow = function(koop) {
     koop.Cache.get(type, key, options, function(err, entry) {
       if (err) {
         async.waterfall([
+          function(callback) {
+            if (!token || Date.now() >= token_expiration){
+              get_token(function(err, res){
+                token = res.body.access_token;
+                callback(null);
+              });
+            } else{
+              callback(null);
+            }
+          },
           function(callback) {
             get_bbox(params.place, function(bbox){
               params.bbox = bbox;
@@ -70,6 +82,23 @@ var Zillow = function(koop) {
     });
   };
 
+  var get_token = function(callback){
+    console.log('getting here?');
+    request.post({
+      url: 'https://www.arcgis.com/sharing/rest/oauth2/token/',
+      json:true,
+      form: {
+        'f': 'json',
+        'client_id': config.esri.id,
+        'client_secret': config.esri.secret,
+        'grant_type': 'client_credentials',
+        'expiration': '60'
+      }
+    }, function(err, res){
+      callback(err, res);
+    });
+  };
+
   var get_bbox = function(place, callback) {
     // takes in a location string and returns a bbox in the format zillow understands
     var bbox;
@@ -77,10 +106,11 @@ var Zillow = function(koop) {
       bbox = locations.place;
       callback(bbox);
     } else {
-      var token = config.esri.token;
+      console.log(token);
       var root = 'http://geocode.arcgis.com';
       var gc_request = '/arcgis/rest/services/World/GeocodeServer/find?f=json&forStorage=true&maxlocations=1&outSR=4326';
       gc_request = root + gc_request + '&text=' + encodeURI(place) + '&token=' + token;
+      console.log(gc_request);
       request.get(gc_request, function(err, res) {
         //handle the geocoder result
         if (err){

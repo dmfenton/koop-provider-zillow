@@ -26,5 +26,12 @@
   "repository": {
     "type": "git",
     "url": "https://github.com:dmfenton/koop-zillow.git"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/dmfenton/koop-zillow/issues"
+  },
+  "homepage": "https://github.com/dmfenton/koop-zillow",
+  "keywords": [
+    "koop"
+  ]
 }
