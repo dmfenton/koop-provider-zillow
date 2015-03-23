@@ -1,5 +1,6 @@
 # Koop-Zillow
+[![npm version](https://img.shields.io/npm/v/koop-zillow.svg?style=flat-square)](https://www.npmjs.com/package/koop-zillow)
 
 ## A simple provider for Zillow
 
-This provider currently wraps a hardcoded request to Zillow and returns a single page.
+Wraps the Zillow API.
