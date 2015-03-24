@@ -12,4 +12,4 @@ exports.controller = require('./controller');
 exports.routes = require('./routes');
 
 // attaches the model to the provider to be passed into the controller at start up time 
-exports.model = require('./models/Zillow.js');
+exports.model = require('./models/zillow.js');
