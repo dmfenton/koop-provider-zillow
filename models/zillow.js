@@ -4,8 +4,6 @@ var request = require('request');
 var async = require('async');
 // used to create hashes that fingerprint a given request
 var hash = require('object-hash');
-// used to authorize read authorization info for the geocoding service
-var config = require('config');
 
 
 var Zillow = function(koop) {
@@ -89,8 +87,8 @@ var Zillow = function(koop) {
       json:true,
       form: {
         'f': 'json',
-        'client_id': config.esri.id,
-        'client_secret': config.esri.secret,
+        'client_id': koop.config.esri.id,
+        'client_secret': koop.config.esri.secret,
         'grant_type': 'client_credentials',
         'expiration': '60'
       }
