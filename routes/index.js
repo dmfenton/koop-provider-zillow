@@ -6,8 +6,8 @@ var Combinatorics = require('js-combinatorics').Combinatorics;
 var actions = {
     'drop': 'drop',
     'FeatureServer': 'featureserver',
-    'Featureserver/:layer': 'featureserver',
-    'Featureserver/:layer/:method': 'featureserver'
+    'FeatureServer/:layer': 'featureserver',
+    'FeatureServer/:layer/:method': 'featureserver'
 };
 var base = '/zillow/:place';
 var parameters = [
@@ -20,33 +20,34 @@ var parameters = [
 var combinations = Combinatorics.permutationCombination(parameters).toArray();
 
 var endpoints = [];
-endpoints.push(base);
+endpoints.push('');
 
 combinations.forEach(function(params){
     if (params.length > 1){
-        var stub = '';
+        var stub = '/';
         params.forEach(function(param){
             stub += param + '/:' + param + '/';
         });
-        endpoints.push(stub);
+        endpoints.push(stub.slice(0,-1));
     } else {
-        endpoints.push(params[0] + '/:' + params[0]);
+        endpoints.push('/' + params[0] + '/:' + params[0]);
     }
 });
-console.log(endpoints);
 
 var routes = {
     'get /zillow': 'index'
 };
 
 endpoints.forEach(function(endpoint){
-    console.log(endpoint);
-    routes['get ' + base + endpoint.slice(0,-1)] = 'get';
+    routes['get ' + base + endpoint] = 'get';
     Object.keys(actions).forEach(function(action){
-        routes['get ' + base + '/' + endpoint + action] = actions[action];
+        routes['get ' + base + endpoint + '/' + action] = actions[action];
     });
 });
 
-console.log(Object.keys(routes));
+Object.keys(routes).forEach(function(route){
+    console.log(route + ': ' + routes[route]);
+});
+
 module.exports = routes;
 

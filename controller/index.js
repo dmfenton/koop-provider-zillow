@@ -31,8 +31,6 @@ var Controller = function( zillow, BaseController ){
       if (err) {
         res.send(err, 500);
       } else {
-        // we remove the geometry if the "find" method already handles geo selection in the cache
-        delete req.query.geometry;
         // inherited logic for processing feature service requests 
         controller.processFeatureServer( req, res, err, data, callback);
       }
