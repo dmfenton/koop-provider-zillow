@@ -45,9 +45,6 @@ endpoints.forEach(function(endpoint){
     });
 });
 
-Object.keys(routes).forEach(function(route){
-    console.log(route + ': ' + routes[route]);
-});
 
 module.exports = routes;
 

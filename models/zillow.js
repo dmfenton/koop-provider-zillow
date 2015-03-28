@@ -4,7 +4,7 @@ var request = require('request');
 var async = require('async');
 // used to create hashes that fingerprint a given request
 var hash = require('object-hash');
-
+var _ = require('underscore');
 
 var Zillow = function(koop) {
 
@@ -17,7 +17,7 @@ var Zillow = function(koop) {
 
   zillow.find = function(params, options, cb) {
     // delete these two keys or else we get inconsistent hash keys depending on the request
-    var key_params = params;
+    var key_params = _.clone(params);
     delete key_params.layer;
     delete key_params.method;
     var key = hash.MD5(key_params);
@@ -105,7 +105,6 @@ var Zillow = function(koop) {
       bbox = locations.place;
       callback(bbox);
     } else {
-      console.log(token);
       var root = 'http://geocode.arcgis.com';
       var gc_request = '/arcgis/rest/services/World/GeocodeServer/find?f=json&forStorage=true&maxlocations=1&outSR=4326';
       gc_request = root + gc_request + '&text=' + encodeURI(place) + '&token=' + token;

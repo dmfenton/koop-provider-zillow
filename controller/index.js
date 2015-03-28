@@ -31,7 +31,7 @@ var Controller = function( zillow, BaseController ){
       if (err) {
         res.send(err, 500);
       } else {
-        // inherited logic for processing feature service requests 
+        // inherited logic for processing feature service requests      
         controller.processFeatureServer( req, res, err, data, callback);
       }
     });
@@ -45,11 +45,9 @@ var Controller = function( zillow, BaseController ){
   // drops the cache
   controller.drop = function(req, res){
     var params = req.params;
-    delete params.methods;
+    delete params.method;
     delete params.layer;
     var key = hash.MD5(params);
-    console.log(params);
-    console.log('sending command to drop: ' + key);
 
     zillow.drop( key, req.query, function(error, result){
       if (error) {
