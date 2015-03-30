@@ -17,10 +17,9 @@ var Zillow = function(koop) {
 
   zillow.find = function(params, options, cb) {
     // delete these two keys or else we get inconsistent hash keys depending on the request
-    var key_params = _.clone(params);
-    delete key_params.layer;
-    delete key_params.method;
-    var key = hash.MD5(key_params);
+    //var key_params = _.clone(params);
+    params.layer = 0;
+    var key = hash.MD5(_.omit(params,'method'));
     // check the cache for data with this type & id 
     // if no prior requests exist then trigger this waterfall
     koop.Cache.get(type, key, options, function(err, entry) {

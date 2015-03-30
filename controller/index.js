@@ -45,9 +45,8 @@ var Controller = function( zillow, BaseController ){
   // drops the cache
   controller.drop = function(req, res){
     var params = req.params;
-    delete params.method;
-    delete params.layer;
-    var key = hash.MD5(params);
+    params.layer = 0;
+    var key = hash.MD5(_.omit(params,'method'));
 
     zillow.drop( key, req.query, function(error, result){
       if (error) {
