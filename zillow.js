@@ -15,7 +15,6 @@ function fetch (market, query, callback) {
   const parameters = buildParameters(market, query)
   const base = 'https://www.zillow.com/search/GetResults.htm?'
   const url = `${base}${encodeURI(parameters)}`
-  console.log(url)
   request.get(url, function (err, res, body) {
     if (err) return callback(err)
     const geojson = translate(body)

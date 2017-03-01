@@ -1,5 +1,6 @@
 FROM node:6
 RUN mkdir -p /srv/www/koop
+ENV NODE_ENV production
 ADD package.json /srv/www/koop
 WORKDIR /srv/www/koop
 RUN npm install

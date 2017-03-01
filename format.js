@@ -2,7 +2,7 @@ module.exports = function (property) {
   const listing = property.filter(p => {
     return Array.isArray(p)
   })[0]
-  const headline = listing[0]
+  const headline = listing[0].toString()
   let price = parseInt(headline.slice(1, -1))
   return {
     type: 'Feature',
