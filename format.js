@@ -3,7 +3,6 @@ module.exports = function (property) {
     return Array.isArray(p)
   })[0]
   const headline = listing[0].toString()
-  let price = parseInt(headline.slice(1, -1))
   return {
     type: 'Feature',
     geometry: {
@@ -14,11 +13,17 @@ module.exports = function (property) {
       listing: `https://www.zillow.com/homedetails/${property[0]}_zpid/`,
       headline: headline,
       type: /^\$/.test(headline) ? 'sale' : headline,
-      price: /K$/.test(headline) ? price * 1000 : price * 1000000,
+      price: computePrice(headline),
       bedrooms: listing[1],
       bathrooms: listing[2],
       squareFeet: listing[3],
       photo: listing[5]
     }
   }
+}
+
+function computePrice (headline) {
+  let price = parseFloat(headline.slice(1, -1))
+  if (/K$/.test(headline)) return price * 1000
+  else if (/M$/.test(headline)) return price * 1000000
 }

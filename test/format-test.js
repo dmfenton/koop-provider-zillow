@@ -41,6 +41,37 @@ test('Format a feature', t => {
   t.end()
 })
 
+test('Format a feature with price in the millions', t => {
+  const input = [
+    35842901,
+    33740246,
+    -84430475,
+    '$1.8M',
+    1,
+    0,
+    0,
+    0,
+    [
+      '$1.8M',
+      3,
+      3,
+      1781,
+      false,
+      'https://photos.zillowstatic.com/p_a/IS2vo2bymiqb781000000000.jpg',
+      '9,147 sqft lot',
+      '',
+      'ForSale',
+      'For Sale (Broker)',
+      27
+    ]
+  ]
+  const feature = format(input)
+  const p = feature.properties
+  t.equal(p.price, 1800000, 'price')
+  t.equal(p.headline, '$1.8M', 'headline')
+  t.end()
+})
+
 test('Format a set of features', t => {
   const json = require('./fixtures/response.json')
   const features = json.map.properties.map(format)
