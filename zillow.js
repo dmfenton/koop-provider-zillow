@@ -1,5 +1,6 @@
 const request = require('request')
 const markets = require('./markets')
+const format = require('./format')
 
 function Zillow (koop) {
   this.getData = function (req, callback) {
@@ -28,32 +29,7 @@ function translate (raw) {
     // create the shell that will hold all the properties
   return {
     type: 'FeatureCollection',
-    features: json.map.properties.map(formatFeature)
-  }
-}
-
-function formatFeature (property) {
-  const listing = property.filter(p => {
-    return Array.isArray(p)
-  })
-  const headline = listing[0]
-  let price = parseInt(headline.slice(1, -1))
-  return {
-    type: 'Feature',
-    geometry: {
-      type: 'Point',
-      coordinates: [property[2] / 1000000, property[1] / 1000000]
-    },
-    properties: {
-      listing: 'http://www.zillow.com/homedetails/' + property[0] + '_zpid/',
-      headline: headline,
-      type: /^\$/.test(headline) ? 'sale' : headline,
-      price: /K$/.test(headline) ? price * 1000 : price * 1000000,
-      bedrooms: listing[1],
-      bathrooms: listing[2],
-      squareFeet: listing[3],
-      photo: listing[5]
-    }
+    features: json.map.properties.map(format)
   }
 }
 
