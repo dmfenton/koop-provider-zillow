@@ -1,5 +1,5 @@
 {
-  "name": "koop-zillow",
+  "name": "koop-provider-zillow",
   "version": "1.0.0",
   "description": "A zillow provider for koop ",
   "main": "index.js",
