@@ -5,7 +5,12 @@ const format = require('./format')
 function Zillow (koop) {
   this.getData = function (req, callback) {
     fetch(req.params.id, req.query, (err, geojson) => {
-      callback(err, geojson)
+      if (req.query.returnCountOnly && req.query.returnCountOnly.toString() === 'true') {
+        return callback(err, { count: 10001 })
+      } else {
+        geojson.ttl = 5 * 60
+        callback(err, geojson)
+      }
     })
   }
 }
@@ -23,9 +28,9 @@ function fetch (market, query, callback) {
 }
 
 function translate (raw) {
-    // translate the Zillow API response into geojson
+  // translate the Zillow API response into geojson
   const json = JSON.parse(raw)
-    // create the shell that will hold all the properties
+  // create the shell that will hold all the properties
   return {
     type: 'FeatureCollection',
     features: json.map.properties.map(format)
@@ -33,8 +38,8 @@ function translate (raw) {
 }
 
 function buildParameters (market, query) {
-    // create a a default set of parameters for the API call
-    // fill in passed in parameters where available
+  // create a a default set of parameters for the API call
+  // fill in passed in parameters where available
   // const options = {
   //   spt: 'homes',
   //   status: 110001,
@@ -110,10 +115,12 @@ function buildParameters (market, query) {
     isMapSearch: true,
     zoom: 11
   }
-    // concatenate all the parameters into one big string
-  return Object.keys(options).reduce((parameters, option) => {
-    return `${parameters}${option}=${options[option]}&`
-  }, '').slice(0, -1)
+  // concatenate all the parameters into one big string
+  return Object.keys(options)
+    .reduce((parameters, option) => {
+      return `${parameters}${option}=${options[option]}&`
+    }, '')
+    .slice(0, -1)
 }
 
 module.exports = Zillow

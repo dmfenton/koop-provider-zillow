@@ -10,6 +10,7 @@
     "test": "standard && tape test/*.js | tap-spec"
   },
   "dependencies": {
+    "koop": "^3.5.1",
     "request": "^2.53.0"
   },
   "author": "Daniel Fenton",
