@@ -1,6 +1,6 @@
 {
   "name": "koop-provider-zillow",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "A zillow provider for koop ",
   "main": "index.js",
   "directories": {
