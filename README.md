@@ -4,3 +4,5 @@
 ## A simple provider for Zillow
 
 Wraps the Zillow API.
+
+- Example URL: koop.com/zillow/atlanta/FeatureServer/0
